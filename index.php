@@ -1,0 +1,190 @@
+<?php
+?>
+
+<html lang="en">
+<head>
+    <title>Dbase to Mysql - Download or save to server !</title>
+    <link href="css/bootstrap.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
+    <link href="css/sweetalert2.min.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
+    <link href="css/ingenieria.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
+    <link href="css/dropzone.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
+    <script src="js/jquery.min.js?<?= time(); ?>" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js?<?= time(); ?>" type="text/javascript"></script>
+    <script src="js/sweetalert2.all.min.js?<?= time(); ?>" type="text/javascript"></script>
+    <script src="js/dropzone.js?<?= time(); ?>" type="text/javascript"></script>
+    <script type="text/javascript">
+        var tmrProgress;
+        Dropzone.autoDiscover = false;
+
+        async function credentials() {
+            var {value: values} = await Swal.fire({
+                title: 'Input server info',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                html:
+                    '<label>Info will not be stored, credentials will be deleted after execution.</label>' +
+                    '<input id="swal-input1" class="swal2-input" value="" placeholder="Server">' +
+                    '<input id="swal-input2" class="swal2-input" value="" placeholder="Database">' +
+                    '<input id="swal-input3" class="swal2-input" value="" placeholder="User">' +
+                    '<input type="password" id="swal-input4" class="swal2-input" value="" placeholder="Password">',
+                preConfirm: () => {
+                    return [
+                        _('swal-input1').value,
+                        _('swal-input2').value,
+                        _('swal-input3').value,
+                        _('swal-input4').value
+                    ]
+                }
+            });
+            if (values) {
+                if ((values[0] === "") || (values[1] === "") || (values[2] === "") || (values[3] === "")){credentials();}
+                _('database').value = values[1];
+                _('server').value = values[0];
+                _('user').value = values[2];
+                _('pass').value = values[3];
+
+                var drop = new Dropzone('div#dropzone', {
+                    url: "upload.php",
+                    uploadMultiple: true,
+                    previewsContainer: '.dz-preview',
+                    parallelUploads: 10,
+                    timeout: 240000,
+                    maxFilesize: 1024,
+                    maxFiles: 1000,
+                    paramName: 'dbfiles',
+                    thumbnailWidth: 100,
+                    thumbnailHeight: 100,
+                    dictRemoveFile: 'Remove file',
+                    addRemoveLinks: true,
+                    acceptedFiles: '.zip,.tar,.csv,.dbf',
+                    init: function(){
+                        var th = this;
+                        this.on('queuecomplete', function(){
+                            var total = this.getAcceptedFiles().length
+                            Swal.fire({
+                                title: 'Processing files',
+                                html: 'This could take a while ... <h3>DO NOT REFRESH YOUR BROWSER !</h3><br><label></label><br><b></b>',
+                                onBeforeOpen: () => {
+                                    Swal.showLoading();
+                                    tmrProgress = setInterval(getProgress,500,total);
+                                    setTimeout(function(){
+                                    $.ajax({
+                                        type: "POST",
+                                        url: 'Dbf2Mysql.php',
+                                        data: {
+                                            db: _('database').value,
+                                            server: _('server').value,
+                                            pass: _('pass').value,
+                                            user: _('user').value
+                                        },
+                                        success: function (data) {
+                                            clearInterval(tmrProgress);
+                                            setTimeout(function(){
+                                                th.removeAllFiles();
+                                            },500);
+                                            swal.close();
+                                            Swal.fire({
+                                                position: 'top-end',
+                                                icon: 'success',
+                                                title: 'Files, uploaded',
+                                                text: 'Database ready, enjoy !.',
+                                                showConfirmButton: false,
+                                                timer: 1500
+                                            });
+                                        }
+                                    });
+                                    },2000);
+
+                                }, allowOutsideClick: () => !Swal.isLoading()
+                            });
+                        });
+
+
+
+                    }
+                });
+
+            } else {
+                credentials();
+            }
+        }
+
+        function getProgress(total){
+            $.ajax({
+                url: 'processed.php',
+                success: function (data){
+                    const content = Swal.getContent()
+                    if (content) {
+                        const l = content.querySelector('label')
+                        if (l) {
+                            if (Number(data.split(";")[0]) > 1) {
+                                l.textContent = 'Processing sql files.';
+                            } else {
+                                l.textContent = 'Creating sql queries to files.';
+                            }
+                        }
+                        const b = content.querySelector('b')
+                        if (b) {
+                            if (Number(data.split(";")[1]) > 0) {
+                                b.textContent = '' + Math.round(((Number(data.split(";")[1]) * 100) / total) * 100) / 100 + ' %';
+                            } else {
+                                b.textContent = '0 %';
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        function _(el) { return document.getElementById(el); }
+
+        $(document).ready(function(){
+            credentials();
+        });
+
+    </script>
+</head>
+<body>
+<div class="wrapper">
+    <div id="container"><img src="logo.png">
+        <div class="sub_container">
+    <input type="hidden" id="server">
+    <input type="hidden" id="database">
+    <input type="hidden" id="user">
+    <input type="hidden" id="pass">
+
+            <div class="dropzone" id="dropzone">
+                <div class="fallback">
+                    <input name="file" type="file" multiple />
+                </div>
+                <div class="dz-message needsclick">
+                    <h1 style="color: #ffffff">Drag and drop files</h1><label style="color: #ffffff">Valid formats:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </label><label style="font-size: large; color: #6cd463">zip, tar, csv, dbf</label>
+                </div>
+
+            <div class="dz-preview dz-file-preview">
+                <div class="dz-details">
+                    <div class="dz-filename"><span data-dz-name></span></div>
+                    <div class="dz-size" data-dz-size></div>
+                    <img data-dz-thumbnail />
+                </div>
+                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                <div class="dz-success-mark"><span>✔</span></div>
+                <div class="dz-error-mark"><span>✘</span></div>
+                <div class="dz-error-message"><span data-dz-errormessage></span></div>
+            </div></div>
+        </div>
+    </div>
+</div>
+<div id="footer">
+    <div class="container">
+        <div class="pull-right hidden-xs">
+            Version <b><?= date("ymd",filectime(__FILE__)); ?></b>
+        </div>
+        <strong>Copyright &copy; <?= date("Y");?> <a href="https://saulgonzalez.dev">Saul Gonzalez</a>.</strong> All rights
+        reserved.
+    </div>
+    <!-- /.container -->
+</div>
+</body>
+</html>
