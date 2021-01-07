@@ -8,6 +8,7 @@
     <link href="css/sweetalert2.min.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
     <link href="css/ingenieria.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
     <link href="css/dropzone.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
+    <link href="fontawesome-free/css/all.css?<?= time(); ?>"  type="text/css" rel="stylesheet">
     <script src="js/jquery.min.js?<?= time(); ?>" type="text/javascript"></script>
     <script src="js/bootstrap.min.js?<?= time(); ?>" type="text/javascript"></script>
     <script src="js/sweetalert2.all.min.js?<?= time(); ?>" type="text/javascript"></script>
@@ -163,15 +164,7 @@
                 </div>
 
             <div class="dz-preview dz-file-preview">
-                <div class="dz-details">
-                    <div class="dz-filename"><span data-dz-name></span></div>
-                    <div class="dz-size" data-dz-size></div>
-                    <img data-dz-thumbnail />
-                </div>
-                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                <div class="dz-success-mark"><span>✔</span></div>
-                <div class="dz-error-mark"><span>✘</span></div>
-                <div class="dz-error-message"><span data-dz-errormessage></span></div>
+
             </div></div>
         </div>
     </div>
@@ -179,10 +172,10 @@
 <div id="footer">
     <div class="container">
         <div class="pull-right hidden-xs">
+            <a href="https://github.com/saulgonzalez76/dbf2mysql.git"><i class="fab fa-github-square"></i> Github repo</a>
             Version <b><?= date("ymd",filectime(__FILE__)); ?></b>
         </div>
-        <strong>Copyright &copy; <?= date("Y");?> <a href="https://saulgonzalez.dev">Saul Gonzalez</a>.</strong> All rights
-        reserved.
+        <strong>Copyright &copy; <?= date("Y");?> <a href="https://saulgonzalez.dev">Saul Gonzalez</a>.</strong> MIT License
     </div>
     <!-- /.container -->
 </div>
