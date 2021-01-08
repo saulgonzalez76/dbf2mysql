@@ -1,20 +1,5 @@
 <?php
 error_reporting(E_ERROR | E_PARSE);
-	/**
-	**	Convert DBF files to MySQL file
-	**	contact: http://gschimpf.com/
-	**	
-	**	USAGE:
-	**		$filename = "dir/file.dbf";
-	**		// Show the result sql
-	**		dbf2mysql::mostrarSQL($filename);
-	**	OR:
-	**		// send a file.sql using header();
-	**		dbf2mysql::enviarSQL($filename);
-	**	OR:
-	**		//save a file.sql in actual folder
-	**		dbf2mysql::guardarSQL($filename);
-	**/
 
 	class dbf2mysql {
 		protected $archivoDBF	= "";
@@ -26,27 +11,20 @@ error_reporting(E_ERROR | E_PARSE);
 		protected $titulosCampos	= Array();
 		protected $salidaSQL		= Array();
 		protected $tiempoInicio		= 0;
-		
+		protected $fileName = "";
+		protected $lineaInsert = "";
+		protected $registro = "";
+
 		private function __construct($ficheroDBF,$ruta) {
 			$this->ruta = $ruta;
-		
-			/* almacenamos el nombre de la tabla */
 			$this->archivoDBF = $ficheroDBF;
-			
-			/* obtenemos el nombre del fichero */
 			$this->nombre = pathinfo($ficheroDBF)['filename'];
-				
-			/* obtenemos el tamano del fichero */
 			$this->tamano = filesize($this->archivoDBF);
-			
-			/* tomamos el tiempo de inicio */
 			$this->tiempoInicio = $this->getFullTime();
 		}
 		
 		public static function guardarSQL($archivo,$ruta) {
-			/* creamos un objeto del tipo dbfFile */
 			$dbf2sql = new dbf2mysql($archivo,$ruta);
-			/* si se pudo convertir retornamos el resultado */
 			if ($dbf2sql->convert())
 				$dbf2sql->saveToFile();
 		}
@@ -72,7 +50,7 @@ error_reporting(E_ERROR | E_PARSE);
 				foreach($this->salidaSQL as $linea)
 					fputs($file, "$linea\n");
 				fclose($file);
-				//echo "El archivo se almaceno en el directorio actual con el nombre '". $this->getName() ."'\n";
+				//echo "El archivo se almaceno en e	l directorio actual con el nombre '". $this->getName() ."'\n";
 			} else
 				echo "No se puede escribir en el directorio\n";
 		}
@@ -118,25 +96,25 @@ error_reporting(E_ERROR | E_PARSE);
 		protected function convertir2sql() {
 			/* creamos la cabecera del archivo SQL */
 			$this->crearCabecera();
-				
+
 			/* creamos la tabla */
 			if (!$this->crearTabla())
 				/* si se produzco un error retornamos false */
 				return False;
-				
+
 			/* volvamos la tabla */
 			if (!$this->crearRegistros())
 				/* si se produzco un error retornamos false */
 				return False;
-				
+
 			/* cerramos el fichero DBF */
 			if (!$this->cerrarDBF())
 				/* si se produzco un error retornamos false */
 				return False;
-				
+
 			/* creamos el footer del archivo */
 			$this->crearFooter();
-				
+
 			/* si llegamos aqui todo fue bien */
 			return True;
 		}
@@ -221,15 +199,15 @@ error_reporting(E_ERROR | E_PARSE);
 			$this->crearCabeceraVolcado();
 			/* agregamos la linea para realizar el bloqueo de la tabla */
 			$this->bloquearTabla();
-				
+
 			/* volvamos los registros */
 			if (!$this->volcarRegistros())
 				/* si se produzco un error retornamos false */
 				return False;
-				
+
 			/* desbloqueamos de la tabla */
 			$this->desbloquearTabla();
-				
+
 			/* si llegamos hasta aqui todo va Ok */
 			return True;
 		}
@@ -245,48 +223,45 @@ error_reporting(E_ERROR | E_PARSE);
 		
 		protected function volcarRegistros() {
 			/* recorremos los registros */
+			$count = 0;
 			for ($i = 1; $i <= $this->cantidadRegistros; $i++) {
-				/* creamos la linea INSERT. Usamos IGNORE para evitar problemas de registros repetidos */
-				$this->crearLineaInsert();
-				
-				/* obtengo el valor del registro */
-				if (!$this->obtenerRegistro($i))
-					/* si se produzco un error retornamos false */
-					return False;
-					
-				/* por cada registro tenemos que recorrer todos los campos */
-				$query = "";
-				$ajuste=0;
-				for ($j = 0; $j < $this->cantidadCampos; $j++) {
-					/* removemos los caracteres raros del registro */
-					if ($this->titulosCampos[$j]['type'] !== "memo") {
-						$dato = str_replace("'", "\'", $this->registro[$j-$ajuste]);
-						/* agregamos el campo a la linea INSERT */
-						if ($query !== "") {
-							$query .= ",";
+				/* create an insert with 500 records or less */
+				if (($count % 500) == 0) {
+					$this->crearLineaInsert(); $query = "";}
+				if ($this->obtenerRegistro($i)) {
+					$count ++;
+					$record = "(";
+					$ajuste = 0;
+					for ($j = 0; $j < $this->cantidadCampos; $j++) {
+						if ($this->titulosCampos[$j]['type'] !== "memo") {
+							$dato = str_replace("'", "\'", $this->registro[$j - $ajuste]);
+							if ($record !== "(") {
+								$record .= ",";
+							}
+							$record .= "'" . trim($dato) . "'";
+						} else {
+							$ajuste++;
+							if ($record !== "(") {
+								$record .= ",";
+							}
+							$record .= "''";
 						}
-						$query .= "'" . trim($dato) . "'";
-					} else {
-						$ajuste++;
-						if ($query !== "") {
-							$query .= ",";
-						}
-						$query .= "''";
 					}
+					$query .= $record . ")";
 
-
+					if ((($count % 500) == 0) || ($i == $this->cantidadRegistros)) {
+						$this->lineaInsert .= $query . ";";
+						$this->agregar($this->lineaInsert);
+					} else {
+						$query .= ",";
+					}
 				}
-				/* finalizamos la linea INSERT */
-				$this->lineaInsert .= $query . ");";
-				/* agregamos la linea INSERT a la salida */
-				$this->agregar($this->lineaInsert);
 			}
-			/* si llegamos hasta aqui todo va Ok */
 			return True;
 		}
 		
 		protected function crearLineaInsert() {
-			$this->lineaInsert = "INSERT INTO `" . $this->nombre . "` VALUES (";
+			$this->lineaInsert = "INSERT INTO `" . $this->nombre . "` VALUES ";
 		}
 		
 		protected function obtenerRegistro($lugar) {
@@ -327,12 +302,12 @@ error_reporting(E_ERROR | E_PARSE);
 			$this->agregar("-- Conversion finalizada. " . date("Y-m-d H:i:s"));
 			$this->agregar("-- Duracion de la conversion: " . $this->tiempoTotal());
 		}
-		
+
 		protected function tiempoTotal() {
 			$this->tiempoInicio = $this->getFullTime() - $this->tiempoInicio;
 			return number_format($this->tiempoInicio,4,",",".") . " segundos";
 		}
-		
+
 		protected function agregar($linea) {
 			/* agregamos una linea a la salida SQL */
 			$this->salidaSQL[] = $linea;

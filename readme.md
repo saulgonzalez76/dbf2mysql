@@ -6,6 +6,11 @@ Php service to convert and create tables from dbase files(dbf) into mysql databa
 
 Clone repo into your webserver directory, needs PHP 7 or above.
 
+## ToDo
+CSV files not yet implemented.<br>
+TAR compressed files not yet implemented.<br>
+ZIP files that contain txt or csv will not run, yet.
+
 ## Usage
 
 Use your favorite browser and go to http://loclahost/dbf2mysql <br>

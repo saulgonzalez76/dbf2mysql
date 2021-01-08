@@ -58,7 +58,7 @@
                     thumbnailHeight: 100,
                     dictRemoveFile: 'Remove file',
                     addRemoveLinks: true,
-                    acceptedFiles: '.zip,.tar,.csv,.dbf',
+                    acceptedFiles: '.zip,.tar,.csv,.dbf,.txt',
                     init: function(){
                         var th = this;
                         this.on('queuecomplete', function(){
@@ -96,7 +96,6 @@
                                         }
                                     });
                                     },2000);
-
                                 }, allowOutsideClick: () => !Swal.isLoading()
                             });
                         });
@@ -134,7 +133,11 @@
                             }
                         }
                     }
+                },
+                error: function () {
+                    clearInterval(tmrProgress);
                 }
+
             })
         }
 
@@ -160,7 +163,7 @@
                     <input name="file" type="file" multiple />
                 </div>
                 <div class="dz-message needsclick">
-                    <h1 style="color: #ffffff">Drag and drop files</h1><label style="color: #ffffff">Valid formats:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </label><label style="font-size: large; color: #6cd463">zip, tar, csv, dbf</label>
+                    <h1 style="color: #ffffff">Drag and drop files</h1><label style="color: #ffffff">Valid formats:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </label><label style="font-size: large; color: #6cd463">zip, tar, csv, txt, dbf</label>
                 </div>
 
             <div class="dz-preview dz-file-preview">

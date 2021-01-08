@@ -16,7 +16,11 @@ if (!is_dir(__DIR__."/sql")) {
 
 if (!empty($_FILES)) {
     for($i=0;$i<sizeof($_FILES['dbfiles']['name']);$i++) {
-        move_uploaded_file($_FILES['dbfiles']['tmp_name'][$i],__DIR__."/files/" . $_FILES['dbfiles']['name'][$i]);
+        if ((pathinfo($_FILES['dbfiles']['name'][$i])['extension'] == "txt") || (pathinfo($_FILES['dbfiles']['name'][$i])['extension'] == "csv")){
+            move_uploaded_file($_FILES['dbfiles']['tmp_name'][$i], __DIR__ . "/sql/" . $_FILES['dbfiles']['name'][$i]);
+        } else {
+            move_uploaded_file($_FILES['dbfiles']['tmp_name'][$i], __DIR__ . "/files/" . $_FILES['dbfiles']['name'][$i]);
+        }
     }
 }
 
