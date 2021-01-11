@@ -49,7 +49,7 @@ if (!file_exists(__DIR__."/status")){
             unlink($filename);
         }
         $processed ++;
-        exec("echo '<?= \"2;$processed\"; ?>' > ".__DIR__."/processed.php");
+        exec("echo '<?= \"3;$processed\"; ?>' > ".__DIR__."/processed.php");
     }
 
     foreach (glob(__DIR__."/sql/*.csv") as $filename) {
@@ -62,7 +62,7 @@ if (!file_exists(__DIR__."/status")){
             unlink($filename);
         }
         $processed ++;
-        exec("echo '<?= \"2;$processed\"; ?>' > ".__DIR__."/processed.php");
+        exec("echo '<?= \"4;$processed\"; ?>' > ".__DIR__."/processed.php");
     }
 
     unlink(__DIR__."/status");

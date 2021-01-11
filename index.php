@@ -39,11 +39,22 @@
                 }
             });
             if (values) {
-                if ((values[0] === "") || (values[1] === "") || (values[2] === "") || (values[3] === "")){credentials();}
+                if ((values[0] === "") || (values[1] === "") || (values[2] === "") || (values[3] === "")){ credentials(); }
                 _('database').value = values[1];
                 _('server').value = values[0];
                 _('user').value = values[2];
                 _('pass').value = values[3];
+                const conn = await mysqlConn();
+                if (!conn) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Connection Failed',
+                        text: 'Bad credentials !',
+                        showConfirmButton: true
+                    }).then(() => {
+                        credentials();
+                    });
+                }
 
                 var drop = new Dropzone('div#dropzone', {
                     url: "upload.php",
@@ -110,6 +121,43 @@
             }
         }
 
+        async function testConn(){
+            var conn;
+            const result = await $.ajax({
+                type: 'POST',
+                url: 'mysqlConn.php',
+                data: {
+                    db: _('database').value,
+                    server: _('server').value,
+                    pass: _('pass').value,
+                    user: _('user').value
+                },
+                success: function (data) {
+                    if (Number(data.split(";")[0]) === 1) {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Connection Established',
+                            text: 'Drag and drop files !.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        conn = true;
+                    } else {
+                        conn = false;
+                    }
+                }
+            });
+            return conn;
+        }
+
+        async function mysqlConn(){
+            // test mysql connection
+            const conn = await testConn();
+            console.log(conn);
+            return conn;
+        }
+
         function getProgress(total){
             $.ajax({
                 url: 'processed.php',
@@ -118,10 +166,20 @@
                     if (content) {
                         const l = content.querySelector('label')
                         if (l) {
-                            if (Number(data.split(";")[0]) > 1) {
-                                l.textContent = 'Processing sql files.';
-                            } else {
-                                l.textContent = 'Creating sql queries to files.';
+                            switch (Number(data.split(";")[0])){
+                                case 1:
+                                    l.textContent = 'Creating sql queries to files.';
+                                    break;
+                                case 2:
+                                    l.textContent = 'Processing sql files from DBF.';
+                                    break;
+
+                                case 3:
+                                    l.textContent = 'Processing TXT files.';
+                                    break;
+                                case 4:
+                                    l.textContent = 'Processing CSV files.';
+                                    break;
                             }
                         }
                         const b = content.querySelector('b')
