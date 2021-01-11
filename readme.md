@@ -4,12 +4,15 @@ Php service to convert and create tables from dbase files(dbf) into mysql databa
 
 ## Installation
 
-Clone repo into your webserver directory, needs PHP 7 or above.
+Clone repo into your webserver directory, then
+```
+sudo pecl install dbase
+```
 
 ## ToDo
 CSV files not yet implemented.<br>
 TAR compressed files not yet implemented.<br>
-ZIP files that contain txt or csv will not run, yet.
+ZIP files that contain csv will not run, yet.
 
 ## Usage
 
@@ -19,7 +22,8 @@ Drag and drop files, admits zip, tar, csv and dbf extensions to convert them int
 each file will become a new table on the specified database.<br>
 Wait for the files to be converted, dbf files in most cases have huge amount of data, so they could take a while to process depending on the server specs.
 
-
+## Automation
+You can point an ftp user to upload the files to to "files" directory, then create a cronjob that runs every minute checking if there's a new file to convert, everytime this script runs it creates a status file that will prevent from been run several times on the same process.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
