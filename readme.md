@@ -7,6 +7,7 @@ Php service to convert and create tables from dbase files(dbf) into mysql databa
 Clone repo into your webserver directory, then
 ```
 sudo pecl install dbase
+sudo apt install php-odbc <-- for ms access database
 ```
 
 ## ToDo
